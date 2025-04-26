@@ -1,20 +1,47 @@
-name: Deploy to GitHub Pages
+name: Build and Deploy to GitHub Pages
 
 on:
   push:
     branches:
-      - master   # or 'master' — your default branch
+      - master   # or 'master', your main branch
+  workflow_dispatch:    # allow manual trigger
+
+permissions:
+  contents: read        # to clone the repo
+  pages: write          # to deploy to GitHub Pages
+  id-token: write       # needed for GitHub Pages authentication
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy `dist/` to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          node-version: '20'    # change if your project uses a different version
+
+      - name: Install dependencies
+        run: npm install        # skip this if you have no package.json
+
+      - name: Build project
+        run: npm run build       # make sure this outputs into `dist/`
+        
+      - name: Upload build artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist           # this is your build output folder
+
+  deploy:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
