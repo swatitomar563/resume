@@ -277,3 +277,56 @@ html(lang='en')
         script(src='https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js')
         // Core theme JS
         script(src='js/scripts.js')
+        
+        // Section Visibility Tracking
+        script.
+            // Track when sections come into view
+            document.addEventListener('DOMContentLoaded', function() {
+                // Sections to track
+                const sections = [
+                    {id: 'about', name: 'About Section'},
+                    {id: 'experience', name: 'Experience Section'},
+                    {id: 'education', name: 'Qualifications Section'},
+                    {id: 'approach', name: 'Teaching Approach Section'},
+                    {id: 'testimonials', name: 'Success Stories Section'},
+                    {id: 'skills', name: 'Why Choose Me Section'},
+                    {id: 'contact', name: 'Contact Section'}
+                ];
+                
+                // Set up intersection observer to detect when sections are visible
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            // Section is visible, send event to Google Analytics
+                            gtag('event', 'section_view', {
+                                'event_category': 'Section Visibility',
+                                'event_label': entry.target.id,
+                                'value': 1
+                            });
+                            
+                            // Unobserve after first view to avoid duplicate events
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, {threshold: 0.5}); // At least 50% of section must be visible
+                
+                // Observe each section
+                sections.forEach(section => {
+                    const element = document.getElementById(section.id);
+                    if (element) {
+                        observer.observe(element);
+                    }
+                });
+                
+                // Track clicks on contact methods
+                const contactLinks = document.querySelectorAll('#contact a');
+                contactLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        gtag('event', 'contact_click', {
+                            'event_category': 'Engagement',
+                            'event_label': this.href,
+                            'value': 1
+                        });
+                    });
+                });
+            });
